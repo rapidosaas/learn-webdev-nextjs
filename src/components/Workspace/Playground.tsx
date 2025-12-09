@@ -35,86 +35,99 @@ const Playground: React.FC<PlaygroundProps> = ({ problem, setSuccess, setSolved 
 	const [runMessages, setRunMessages] = useState<{ type: "hint" | "error"; text: string }[]>([]);
 	const [activePanel, setActivePanel] = useState<"tests" | "console" | "preview">("tests");
 
-	const handleSubmit = async () => {
-		try {
-			userCode = userCode.slice(userCode.indexOf(problem.starterFunctionName));
-			const cb = new Function(`return ${userCode}`)();
-			const handler = problems[problem.slug].handlerFunction;
-			if (typeof handler === "function") {
-				const success = handler(cb);
-				if (success) {
-					toast.success("Congrats! All tests passed", {
-						position: "top-center",
-						autoClose: 3000,
-						theme: "dark",
-					});
-					if (setSuccess) {
-						setSuccess(true);
-						setTimeout(() => {
-							setSuccess(false);
-						}, 4000);
-					}
-					setSolved(true);
-					localStorage.setItem(`solved-${problem.slug}`, "true");
-				}
-			}
-		} catch (error: any) {
-			if (
-				error.message.startsWith("AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:")
-			) {
-				toast.error("Oops! One or more test cases failed", {
-					position: "top-center",
-					autoClose: 3000,
-					theme: "dark",
-				});
-			} else {
-				toast.error(error.message, {
-					position: "top-center",
-					autoClose: 3000,
-					theme: "dark",
-				});
-			}
-		}
-	}
+	       const handleSubmit = async () => {
+		       try {
+			       userCode = userCode.slice(userCode.indexOf(problem.starterFunctionName));
+			       const cb = new Function(`return ${userCode}`)();
+			       const handler = problems[problem.slug].handlerFunction;
+			       if (typeof handler === "function") {
+				       const results = handler(cb);
+				       const hasError = Array.isArray(results) && results.some(r => r.type === "error");
+					   if (hasError) {
+						   toast.error("Oops! One or more test cases failed", {
+							   position: "top-center",
+							   autoClose: 3000,
+							   theme: "dark",
+						   });
+					   } else {
+						   toast.success("Congrats! All tests passed", {
+							   position: "top-center",
+							   autoClose: 3000,
+							   theme: "dark",
+						   });
+						   if (setSuccess) {
+							   setSuccess(true);
+							   setTimeout(() => {
+								   setSuccess(false);
+							   }, 4000);
+						   }
+						   setSolved(true);
+						   localStorage.setItem(`solved-${problem.slug}`, "true");
+					   }
+			       }
+		       } catch (error: any) {
+			       if (
+				       error.message.startsWith("AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:")
+			       ) {
+				       toast.error("Oops! One or more test cases failed", {
+					       position: "top-center",
+					       autoClose: 3000,
+					       theme: "dark",
+				       });
+			       } else {
+				       toast.error(error.message, {
+					       position: "top-center",
+					       autoClose: 3000,
+					       theme: "dark",
+				       });
+			       }
+		       }
+	       }
 
-	const handleRun = async () => {
-		try {
-			userCode = userCode.slice(userCode.indexOf(problem.starterFunctionName));
-			const cb = new Function(`return ${userCode}`)();
-			console.log(cb);
-			const handler = problems[problem.slug].handlerFunction;
-			console.log(handler);
-			if (typeof handler === "function") {
-				const success = handler(cb);
-				if (success) {
-					setRunMessages([{ type: "hint", text: "It works! Try to submit." }]);
-					toast.success("It works! Try to submit", {
-						position: "top-center",
-						autoClose: 3000,
-						theme: "dark",
-					});
-				}
-			}
-		} catch (error: any) {
-			if (
-				error.message.startsWith("AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:")
-			) {
-				setRunMessages([{ type: "error", text: "One or more test cases failed." }]);
-				toast.error("Oops! One or more test cases failed", {
-					position: "top-center",
-					autoClose: 3000,
-					theme: "dark",
-				});
-			} else {
-				setRunMessages([{ type: "error", text: error.message }]);
-				toast.error(error.message, {
-					position: "top-center",
-					autoClose: 3000,
-					theme: "dark",
-				});
-			}
-		}
-	}
+	       const handleRun = async () => {
+		       try {
+			       userCode = userCode.slice(userCode.indexOf(problem.starterFunctionName));
+			       const cb = new Function(`return ${userCode}`)();
+			       const handler = problems[problem.slug].handlerFunction;
+			       if (typeof handler === "function") {
+				       const results = handler(cb);
+					   const hasError = Array.isArray(results) && results.some(r => r.type === "error");
+					   if (hasError) {
+						   setRunMessages(results);
+						   toast.error("Oops! One or more test cases failed", {
+							   position: "top-center",
+							   autoClose: 3000,
+							   theme: "dark",
+						   });
+					   } else {
+						   setRunMessages([{ type: "hint", text: "It works! Try to submit." }]);
+						   toast.success("It works! Try to submit", {
+							   position: "top-center",
+							   autoClose: 3000,
+							   theme: "dark",
+						   });
+					   }
+			       }
+		       } catch (error: any) {
+			       if (
+				       error.message.startsWith("AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:")
+			       ) {
+				       setRunMessages([{ type: "error", text: "One or more test cases failed." }]);
+				       toast.error("Oops! One or more test cases failed", {
+					       position: "top-center",
+					       autoClose: 3000,
+					       theme: "dark",
+				       });
+			       } else {
+				       setRunMessages([{ type: "error", text: error.message }]);
+				       toast.error(error.message, {
+					       position: "top-center",
+					       autoClose: 3000,
+					       theme: "dark",
+				       });
+			       }
+		       }
+	       }
 
 	const handleReset = () => {
 		setUserCode(problem.starterCode);
